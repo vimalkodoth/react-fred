@@ -2,10 +2,12 @@ import React, { Component } from 'react';
 import '../App.css';
 
 class DropDown extends Component {
-
+  componentDidMount() {
+    document.querySelector('#select-g select:first-child').focus();
+  }
   render() {
     return (
-        <div>
+        <div id="select-g">
           <select onChange={this.props.onChange}>
           {
             this.props.list.map((item, index) => (

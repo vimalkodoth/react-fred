@@ -22,12 +22,12 @@ class Graph extends Component {
     return config['SERIES_ID'][type]
   }
 
-  fetchContentByType(type){
+  fetchContentByType(type, startDate, endDate){
     var ids = this.getSeriesId(type).split('-'),
         that = this;
     
     ids = ids.map((id) => {
-      return getObservationsBySeriesId(id)
+      return getObservationsBySeriesId(id, startDate, endDate)
     });
     return ids.reduce((promiseChain, currentTask) => {
       return promiseChain.then(chainResults =>
@@ -36,21 +36,20 @@ class Graph extends Component {
           )
       );
     }, Promise.resolve([])).then(arrayOfResults => {
-        that.setState((state) => {
-          state.data = state.data.concat(arrayOfResults);
-          return state;
-        });
+        that.setState((state) => ({
+          data : arrayOfResults
+        }));
     });
   }
-
   
   componentDidMount() {
-    this.fetchContentByType(this.props.type);
+    this.fetchContentByType(this.props.type, this.props.from, this.props.to);
   }
   
   componentWillReceiveProps(nextProps) {
+    debugger;
     this.clearData();
-    this.fetchContentByType(nextProps.type);
+    this.fetchContentByType(nextProps.type, nextProps.from, nextProps.to);
   }
 
   renderComponent(){
@@ -70,7 +69,7 @@ class Graph extends Component {
   render() {
     return (
       this.renderComponent()
-    );
+    )
   }
 }
 

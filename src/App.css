@@ -1,3 +1,18 @@
 .App {
   text-align: center;
 }
+
+#select-g,#select-g-date{
+	margin:10px;
+}
+
+input, select {
+	border: 1px solid #000;
+    border-radius: 0;
+    padding: 10px;
+    margin-right:5px;
+}
+
+select {
+	padding:7px;
+}

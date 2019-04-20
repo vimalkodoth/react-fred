@@ -69,12 +69,20 @@ class Shaded extends Component {
 		this.drawChart();
 	}
 
+	componentWillUnmount(){
+		d3.select("svg").remove();
+	}
 	componentWillReceiveProps(nextProps) {
+		if(!nextProps.data.length) return;
+		d3.select("svg").remove();
 		this.drawChart(nextProps.data);
 	}
 
 	render() {
-		return <div id="shaded_chart"></div>
+		console.log('whats happening ???');
+		return (
+			<div id="shaded_chart"></div>
+		)
 	}
 
 
