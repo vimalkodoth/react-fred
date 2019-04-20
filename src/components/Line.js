@@ -76,12 +76,17 @@ class Line extends Component {
 			.attr("d", line);
 
 	}
+	
+	componentWillUnmount(){
+		d3.select("svg").remove();
+	}
 
 	componentDidMount(){
 		this.drawChart();
 	}
 
 	componentWillReceiveProps(nextProps) {
+		d3.select("svg").remove();
 		this.drawChart(nextProps.data);
 	}
 

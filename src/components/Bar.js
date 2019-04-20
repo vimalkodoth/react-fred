@@ -74,8 +74,13 @@ class Bar extends Component {
 	componentDidMount(){
 		this.drawChart();
 	}
+	
+	componentWillUnmount(){
+		d3.select("svg").remove();
+	}
 
 	componentWillReceiveProps(nextProps) {
+		d3.select("svg").remove();
 		this.drawChart(nextProps.data);
 	}
   render() {
