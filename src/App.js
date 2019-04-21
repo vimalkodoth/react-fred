@@ -38,7 +38,7 @@ class App extends Component {
       <div className="App">
         <Dropdown list={this.state.list} onChange={this.handleChange}/>
         <Date onChange={this.updateInputDate.bind(this)} from={this.state.from} to={this.state.to}/>
-        <Graph type={this.state.type} from={this.state.from} to={this.state.to}/>
+        <Graph type={this.state.type} />
       </div>
     );
   }

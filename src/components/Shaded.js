@@ -47,7 +47,7 @@ class Shaded extends Component {
 
     // Add Y axis
     var yScale = d3.scaleLinear()
-      .domain([0, d3.max(data, function(d) { return +d.value; })])
+      .domain([-d3.max(data, function(d) { return +d.value; }), d3.max(data, function(d) { return +d.value; })])
       .range([ height, 0 ]);
     svg.append("g")
       .call(d3.axisLeft(yScale));
