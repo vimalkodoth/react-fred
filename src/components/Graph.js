@@ -47,7 +47,6 @@ class Graph extends Component {
   }
   
   componentWillReceiveProps(nextProps) {
-    debugger;
     this.clearData();
     this.fetchContentByType(nextProps.type, nextProps.from, nextProps.to);
   }

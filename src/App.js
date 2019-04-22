@@ -29,7 +29,6 @@ class App extends Component {
     var value = evt.target.value;
     var obj = {};
     obj[key] = value ;
-    debugger;
     this.setState((state) => obj);
   }
 
