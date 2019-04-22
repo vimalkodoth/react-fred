@@ -10,6 +10,18 @@ export default {
 	GDPCA : {
 		frequency  : 'a',
 		aggregation_method : 'avg'
+	},
+	T10Y2Y : {
+		frequency  : 'a',
+		aggregation_method : 'avg'
+	},
+	DGS10 : {
+		frequency  : 'a',
+		aggregation_method : 'avg'
+	},
+	T10YIE : {
+		frequency  : 'a',
+		aggregation_method : 'avg'		
 	}
   }
   
