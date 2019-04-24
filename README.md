@@ -1,4 +1,12 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This React based Data Visualization app uses D3.js to render data in three forms.
+
+1. Area Graph
+2. Bar Chart
+3. Line Graph
+
+
+This App uses FRED API (https://research.stlouisfed.org/docs/api/fred/)
+
 
 Note: Please run npm install inside the directory to install node_modules dependencies before running below commands.
 
