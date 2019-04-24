@@ -37,7 +37,7 @@ class Graph extends Component {
       );
     }, Promise.resolve([])).then(arrayOfResults => {
         that.setState((state) => ({
-          data : arrayOfResults
+          data : [].concat(arrayOfResults)
         }));
     });
   }
@@ -46,7 +46,7 @@ class Graph extends Component {
     this.fetchContentByType(this.props.type, this.props.from, this.props.to);
   }
   
-  componentWillReceiveProps(nextProps) {
+  componentWillReceiveProps(nextProps) { 
     this.clearData();
     this.fetchContentByType(nextProps.type, nextProps.from, nextProps.to);
   }

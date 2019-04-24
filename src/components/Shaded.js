@@ -51,7 +51,8 @@ class Shaded extends Component {
       .range([ height, 0 ]);
     svg.append("g")
       .call(d3.axisLeft(yScale));
-
+	
+	debugger; 
     // Add the area
     svg.append("path")
       .datum(data)
@@ -74,6 +75,7 @@ class Shaded extends Component {
 	}
 	componentWillReceiveProps(nextProps) {
 		if(!nextProps.data.length) return;
+		debugger;
 		d3.select("svg").remove();
 		this.drawChart(nextProps.data);
 	}
