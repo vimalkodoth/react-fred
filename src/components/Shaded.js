@@ -1,16 +1,23 @@
 import React, { Component } from 'react';
 import * as d3 from 'd3';
 import '../App.css';
+import { timeThursdays, schemeDark2 } from 'd3';
 
-class Shaded extends Component {
+var margin = {top: 30, right: 30, bottom: 30, left: 30},
+width = 800,
+height = 400;
 
-	drawChart(data){
+var t = d3.transition()
+.duration(1000)
+.ease(d3.easeLinear);
+
+function drawChart(data){
 	// set the dimensions and margins of the graph
-	if(!this.props.data.length && !data){
+	if(!data || !data.length){
 		return;
 	}
 
-	var data = this.props.data.length ? this.props.data[0].observations: data[0].observations;
+	data = data[0].observations;
 
 	data = data.map(function(obj, index){
 		return {
@@ -18,76 +25,89 @@ class Shaded extends Component {
 			value: obj.value === '.' ? 0 : obj.value
 		}
 	})
-	var margin = {top: 10, right: 30, bottom: 50, left: 50},
-	    width = 800 - margin.left - margin.right,
-	    height = 400 - margin.top - margin.bottom;
-
-	// append the svg object to the body of the page
-	var svg = d3.select("#shaded_chart")
-	  .append("svg")
-	    .attr("width", width + margin.left + margin.right)
-	    .attr("height", height + margin.top + margin.bottom)
-	    .append("g")
-	    .attr("transform",
-	          "translate(" + margin.left + "," + margin.top + ")");
-	
 	// Add X axis
     var xScale = d3.scaleTime()
       .domain(d3.extent(data, function(d) { return d.date; }))
-      .range([ 0, width ]);
-    svg.append("g")
-      .attr("transform", "translate(0," + height + ")")
-      .call(d3.axisBottom(xScale).tickFormat(d3.timeFormat("%Y-%m")))
-      .selectAll("text")
-      .style("text-anchor", "end")
-      .attr("dx", "-.8em")
-      .attr("dy", "-.55em")
-      .attr("transform", "rotate(-90)" );
-
+      .range([ margin.left, width-margin.right ]);
 
     // Add Y axis
     var yScale = d3.scaleLinear()
       .domain([-d3.max(data, function(d) { return +d.value; }), d3.max(data, function(d) { return +d.value; })])
-      .range([ height, 0 ]);
-    svg.append("g")
-      .call(d3.axisLeft(yScale));
-	
-	debugger; 
-    // Add the area
-    svg.append("path")
-      .datum(data)
-      .attr("fill", "#cce5df")
-      .attr("stroke", "#69b3a2")
-      .attr("stroke-width", 1.5)
-      .attr("d", d3.area()
-        .x(function(d) { return xScale(d.date) })
-        .y0(yScale(0))
-        .y1(function(d) { return yScale(+d.value) })
-      );
+	  .range([ height-margin.bottom, margin.top ]);
+
+
+	var area = d3.area()
+	.x(function(d) { return xScale(d.date) })
+	.y0(yScale(0))
+	.y1(function(d) { return yScale(+d.value) });
+
+	return {
+		path: {
+			d: area(data)
+		},
+		xScale,
+		yScale
 	}
-	
-	componentDidMount(){
-		this.drawChart();
+}
+class Shaded extends Component {
+
+
+	state = {
+		path: {
+			d: ''
+		}
 	}
 
-	componentWillUnmount(){
-		d3.select("svg").remove();
+	yAxis = d3.axisLeft();
+	xAxis = d3.axisBottom();
+
+	componentDidMount() {
+		console.log('component did mount');
 	}
-	componentWillReceiveProps(nextProps) {
-		if(!nextProps.data.length) return;
-		debugger;
-		d3.select("svg").remove();
-		this.drawChart(nextProps.data);
+	static getDerivedStateFromProps(nextProps, prevState){
+		const {data} = nextProps;
+		if(!data.length) return {};
+		const {path, xScale, yScale} = drawChart(data);
+		return {path, xScale, yScale, data:data[0].observations};
 	}
+
+	componentDidUpdate(prevProps, prevState, snapshot){
+		if(!this.state.xScale || !this.state.path.d) return;
+		if(!this.props.data.length) return;
+		// if(prevProps.data.length) return;
+		this.xAxis.scale(this.state.xScale);
+		d3.select(this.refs.xAxis).call(this.xAxis);
+		this.yAxis.scale(this.state.yScale);
+		d3.select(this.refs.yAxis).call(this.yAxis);
+		var path = d3.select(this.refs.path)
+		.selectAll('path')
+		.data(this.state.data);
+		console.log(path);
+		path.exit()
+		.transition(t)
+		.attr('d', this.state.path.d)
+		.remove();
+
+		var enter = path.enter().append('path');
+
+		path = enter.merge(path)
+			.transition(t)
+			.attr('d', this.state.path.d);
+
+	}
+
 
 	render() {
-		console.log('whats happening ???');
 		return (
-			<div id="shaded_chart"></div>
+			<svg width={width} height={height}>
+				<g ref='path'>
+					<path fill={'#cce5ef'} stroke={'#69b3a2'} strokeWidth={'1.5'}></path>
+				</g>
+				<g ref="xAxis" transform={`translate(0,${((height)/2)})`}></g>
+				<g ref="yAxis" transform={`translate(${margin.left},0)`}></g>
+			</svg>
 		)
 	}
-
-
 }
 
 export default Shaded;
