@@ -129,7 +129,9 @@ class Shaded extends Component {
 		const {xScale, yScale, data} = this.state;
 		if(!data) return;
 		const focus = d3.select(".focus"),
+			focusText = d3.select(".focusText"),
 			overlay = d3.select('.overlay').node(),
+			textRect = d3.select('.textRect'),
 			x0 = xScale.invert(d3.mouse(overlay)[0]);
 		var i = bisectDate(data, x0, 1);
 		if( i<=0 || (i >= data.length)) return;
@@ -137,8 +139,17 @@ class Shaded extends Component {
 		d1 = data[i],
 		d = x0 - d0.date > d1.date - x0 ? d1 : d0;
 		focus.attr("transform", "translate(" + xScale(d.date) + "," + yScale(+d.value) + ")");
-		focus.select("text").text((d.value+', '+d.date.getFullYear()));
+		focus.select("text").text((d.value+', '+d.date.getFullYear())).style('fill', '#FFF');
+
+		const bBox = focusText.node().getBBox();
+		textRect
+    	.attr("width", bBox.width+10) // 10 buffer for text padding
+		.attr("height", bBox.height+5) // 5 buffer for text padding
+		.attr('rx', 10)
+		.attr("fill", "rgba(0,0,0,0.45");
+
 	}
+
 
 	render() {
 
@@ -147,18 +158,20 @@ class Shaded extends Component {
 		}
 		return (
 			<svg ref='svg' width={width} height={height} onMouseEnter={this.onMouseOver}>
+				<g ref="xAxis" transform={`translate(0,${((height)/2)})`}></g>
+				<g ref="yAxis" transform={`translate(${margin.left},0)`}></g>
 				<g ref='path'>
 					<linearGradient ref="gradient" id="gradient" gradientUnits="userSpaceOnUse"/>
 					<path strokeWidth={'1.5'} fill={'url(#gradient)'}></path>
 					<g className="focus" style={focusStyle}>
-						<circle r="4.5"></circle>
-						<text x="-20" dy="1.5em"></text>
+						<rect className="textRect" transform={`translate(-20, 5)`}></rect>
+						<g className="focusText">
+							<circle r="4.5"></circle>
+							<text x="-15" dy="2em"></text>
+						</g>
 					</g>
-					<rect transform={`translate(25,25)`}className="overlay" style={{fill:'none', pointerEvents:'all'}} width="760" height="350" onMouseOut={this.onMouseOut} onMouseOver={this.onMouseOver}>
-					</rect>
+					<rect transform={`translate(25,25)`} className="overlay" style={{fill:'none', pointerEvents:'all'}} width="760" height="350" onMouseOut={this.onMouseOut} onMouseOver={this.onMouseOver} />
 				</g>
-				<g ref="xAxis" transform={`translate(0,${((height)/2)})`}></g>
-				<g ref="yAxis" transform={`translate(${margin.left},0)`}></g>
 			</svg>
 		)
 	}
