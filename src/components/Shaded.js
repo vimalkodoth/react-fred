@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
 import * as d3 from 'd3';
 import '../App.css';
-import { timeThursdays, schemeDark2 } from 'd3';
+import { timeThursdays, schemeDark2, svg } from 'd3';
 
 var margin = {top: 30, right: 30, bottom: 30, left: 30},
 width = 800,
-height = 400;
-
+height = 400,
+bisectDate = d3.bisector(function(d) { return d.date; }).left;
 var t = d3.transition()
 .duration(1000)
 .ease(d3.easeLinear);
@@ -35,6 +35,9 @@ function drawChart(data){
       .domain([-d3.max(data, function(d) { return +d.value; }), d3.max(data, function(d) { return +d.value; })])
 	  .range([ height-margin.bottom, margin.top ]);
 
+	var colorExtent = d3.extent(data, d=> +d.value);
+
+	const colorScale = d3.scaleSequential().domain(colorExtent).interpolator(d3.interpolateWarm);
 
 	var area = d3.area()
 	.x(function(d) { return xScale(d.date) })
@@ -46,7 +49,9 @@ function drawChart(data){
 			d: area(data)
 		},
 		xScale,
-		yScale
+		yScale,
+		colorScale,
+		observations: data
 	}
 }
 class Shaded extends Component {
@@ -63,15 +68,18 @@ class Shaded extends Component {
 
 	componentDidMount() {
 		console.log('component did mount');
+		d3.select('.overlay').on("mousemove", this.onMouseMove.bind(this));
 	}
 	static getDerivedStateFromProps(nextProps, prevState){
 		const {data} = nextProps;
 		if(!data.length) return {};
-		const {path, xScale, yScale} = drawChart(data);
-		return {path, xScale, yScale, data:data[0].observations};
+		const {path, xScale, yScale, colorScale, observations} = drawChart(data);
+		debugger;
+		return {path, xScale, yScale, colorScale, data: observations};
 	}
 
 	componentDidUpdate(prevProps, prevState, snapshot){
+		var that = this;
 		if(!this.state.xScale || !this.state.path.d) return;
 		if(!this.props.data.length) return;
 		// if(prevProps.data.length) return;
@@ -79,29 +87,75 @@ class Shaded extends Component {
 		d3.select(this.refs.xAxis).call(this.xAxis);
 		this.yAxis.scale(this.state.yScale);
 		d3.select(this.refs.yAxis).call(this.yAxis);
+
+		//Add a gradient
+		var gradient = d3.select(this.refs.gradient);
+		gradient
+		.attr('x1',"0").attr('y1', "0")
+		.attr('x2',"100%").attr('y2', "0")
+		.selectAll('stop')
+		.data(this.state.colorScale.ticks().map((t, i, n) => ({ offset: `${100*i/n.length}%`, color: this.state.colorScale(t) })))
+		.enter()
+		.append('stop')
+		.attr('offset', d => d.offset)
+		.attr('stop-color', d => d.color);
+
+
 		var path = d3.select(this.refs.path)
 		.selectAll('path')
-		.data(this.state.data);
-		console.log(path);
+		.datum(this.state.data)
+
 		path.exit()
 		.transition(t)
 		.attr('d', this.state.path.d)
 		.remove();
-
 		var enter = path.enter().append('path');
 
 		path = enter.merge(path)
 			.transition(t)
-			.attr('d', this.state.path.d);
+			.attr('d', this.state.path.d)
 
 	}
 
+	onMouseOut = (e) => {
+		d3.select('.focus').style('display', 'none');
+	}
+
+	onMouseOver = (e) => {
+		d3.select('.focus').style('display', null);
+	}
+
+	onMouseMove = (e) => {
+		const {xScale, yScale, data} = this.state;
+		if(!data) return;
+		const focus = d3.select(".focus"),
+			overlay = d3.select('.overlay').node(),
+			x0 = xScale.invert(d3.mouse(overlay)[0]);
+		var i = bisectDate(data, x0, 1);
+		if( i<=0 || (i >= data.length)) return;
+		const d0 = data[i - 1],
+		d1 = data[i],
+		d = x0 - d0.date > d1.date - x0 ? d1 : d0;
+		focus.attr("transform", "translate(" + xScale(d.date) + "," + yScale(+d.value) + ")");
+		focus.select("text").text((d.value+', '+d.date.getFullYear()));
+	}
 
 	render() {
+
+		var focusStyle = {
+			display: 'none'
+		}
 		return (
-			<svg width={width} height={height}>
+			<svg ref='svg' width={width} height={height} onMouseEnter={this.onMouseOver}>
 				<g ref='path'>
-					<path fill={'#cce5ef'} stroke={'#69b3a2'} strokeWidth={'1.5'}></path>
+					<linearGradient ref="gradient" id="gradient" gradientUnits="userSpaceOnUse"/>
+					<path strokeWidth={'1.5'} fill={'url(#gradient)'}></path>
+					<g className="focus" style={focusStyle}>
+						<circle r="4.5"></circle>
+						<text x="-20" dy="1.5em"></text>
+					</g>
+					<rect transform={`translate(25,25)`}className="overlay" style={{fill:'none', pointerEvents:'all'}} width="760" height="350" onMouseOut={this.onMouseOut} onMouseOver={this.onMouseOver}>
+					</rect>
 				</g>
 				<g ref="xAxis" transform={`translate(0,${((height)/2)})`}></g>
 				<g ref="yAxis" transform={`translate(${margin.left},0)`}></g>
